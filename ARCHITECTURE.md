@@ -1,7 +1,18 @@
 # Architecture Documentation
 
-The Event Discovery Platform is architected using **Next.js (App Router)** to leverage modern React Server Components for performance, SEO, and scalability. Each route under `/[locale]` is built as a server-rendered page by default, ensuring that event listings and metadata are pre-rendered for optimal search engine visibility. Data fetching is performed using **async Server Components** (e.g., `getEvents` and `getEventBySlug`) that read from mock JSON data, simulating a backend API layer. Client Components are used selectively where interactivity is required — such as in the **EventFilter**, **Book Ticket form**, and navigation — following the “server by default, client when necessary” pattern.
+The **Event Discovery Platform** follows a **modular and layered architecture** leveraging **Next.js App Router** to separate **server** and **client** responsibilities cleanly.
+It uses **Zustand** for persistent local state (tickets), **mock JSON APIs** for event data, and **Next.js SEO utilities** for metadata and sitemap generation.
 
-The platform is designed around **clean separation of concerns**. Presentation logic (UI components like `EventCard`, `EventGrid`, and `TicketsTable`) is isolated from data fetching and routing logic in the `/lib` and `/app` layers. This modular structure improves reusability and maintainability. The **locale-aware routing** (`/[locale]/...`) provides bilingual support (English and Arabic) without requiring an external i18n library, using layout-level direction control (`dir="rtl"` for Arabic). Tailwind CSS powers the styling with a fully responsive, mobile-first design, while maintaining accessibility and consistent UI spacing through utility classes.
+###  Key Architectural Principles
 
-SEO and performance were key architectural priorities. The app uses the **Next.js Metadata API** for dynamic meta tags, Open Graph, and Twitter cards. Each event detail page includes **structured data (JSON-LD)** to improve discoverability by search engines. A **dynamic sitemap** and `robots.txt` further enhance crawlability. All pages include **loading skeletons** for perceived performance, and data is cached where possible for efficient re-renders. This architecture achieves the balance between modern React practices, high SEO standards, and clean, scalable frontend design.
+1. **SSR for SEO & performance**:
+   Event listings and details are fetched server-side for faster first paint and crawlable markup.
+2. **Client interactivity only where needed**:
+   Components like filters, search, form submission, and ticket management run fully client-side.
+3. **Persistent state** via Zustand’s localStorage middleware ensures tickets remain across sessions.
+4. **Localization**:
+   Every route is namespaced by locale (`/[locale]/...`) and layout switches text direction dynamically (`ltr`/`rtl`).
+5. **Scalable mock API layer**:
+   Event data is simulated via async functions using `data/events.json`, easily replaceable with a real backend.
+6. **SEO Layer**:
+   Dynamic `generateMetadata`, Open Graph, Twitter Cards, JSON-LD schema, and auto-generated `sitemap.xml` and `robots.txt`.
