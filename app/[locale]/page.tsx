@@ -5,7 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://youreventsite.com"),
+  metadataBase: new URL("http://localhost:3000"),
   title: {
     default: "Event Discovery Platform",
     template: "%s | Event Discovery Platform",
@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Event Discovery Platform",
     locale: "en_US",
-    url: "https://youreventsite.com",
+    url: "http://localhost:3000",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@youreventsite",
+    site: "@discoveryevent",
   },
 };
 
 export default async function Home() {
-   redirect("/events");
+   redirect(`/${locale}/events`);
 }

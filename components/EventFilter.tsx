@@ -1,71 +1,70 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
-interface Props {
-  locale: string;
-}
-
-export default function EventFilter({ locale }: Props) {
+export default function EventFilter({ locale }: { locale: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
 
-  const [q, setQ] = useState(searchParams.get("q") || "");
+  const [query, setQuery] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
 
-  const isArabic = locale === "ar";
-
-  useEffect(() => {
-    setQ(searchParams.get("q") || "");
-    setCategory(searchParams.get("category") || "");
-  }, [searchParams]);
-
+  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-
-    if (q) params.set("q", q);
+    const params = new URLSearchParams(searchParams);
+    if (query) params.set("q", query);
+    else params.delete("q");
     if (category) params.set("category", category);
-
-    router.push(`${pathname}?${params.toString()}`);
+    else params.delete("category");
+    params.delete("page");
+    router.push(`/${locale}/events?${params.toString()}`);
   };
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set("category", value);
+    else params.delete("category");
+    params.delete("page"); // reset to page 1
+    router.push(`/${locale}/events?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    setQuery(searchParams.get("q") || "");
+    setCategory(searchParams.get("category") || "");
+  }, [searchParams]);
 
   return (
     <form
       onSubmit={handleSearch}
-      className={`flex flex-wrap gap-3 items-center ${
-        isArabic ? "flex-row-reverse" : ""
-      }`}
+      className="flex flex-col sm:flex-row gap-3 sm:items-center"
     >
       <input
         type="text"
-        placeholder={isArabic ? "ابحث عن فعالية..." : "Search events..."}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        className="border border-gray-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        dir={isArabic ? "rtl" : "ltr"}
+        placeholder={locale === "ar" ? "ابحث عن فعالية..." : "Search events..."}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="border border-gray-300 rounded-lg px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary"
       />
 
       <select
         value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        className="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        dir={isArabic ? "rtl" : "ltr"}
+        onChange={(e) => handleCategoryChange(e.target.value)}
+        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
       >
-        <option value="">{isArabic ? "كل الفئات" : "All Categories"}</option>
-        <option value="music">{isArabic ? "موسيقى" : "Music"}</option>
-        <option value="technology">{isArabic ? "مؤتمر" : "Technology"}</option>
-        <option value="design">{isArabic ? "رياضة" : "Design"}</option>
-        <option value="art">{isArabic ? "فن" : "Art"}</option>
+        <option value="">{locale === "ar" ? "جميع الفئات" : "All Categories"}</option>
+        <option value="Technology">{locale === "ar" ? "تكنولوجيا" : "Technology"}</option>
+        <option value="Music">{locale === "ar" ? "موسيقى" : "Music"}</option>
+        <option value="Design">{locale === "ar" ? "تصميم" : "Design"}</option>
       </select>
 
       <button
         type="submit"
         className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
       >
-        {isArabic ? "بحث" : "Search"}
+        {locale === "ar" ? "بحث" : "Search"}
       </button>
     </form>
   );

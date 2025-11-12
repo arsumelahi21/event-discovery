@@ -1,15 +1,14 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "http://localhost:3000/";
+  const baseUrl = "http://localhost:3000"; // replace before deploy
 
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin/"], 
+      disallow: ["/admin/", "/private/"], // optional
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-∂

@@ -1,6 +1,7 @@
-import { getEvents } from "@/lib/api";
+import { getPaginatedEvents } from "@/lib/api";
 import EventGrid from "@/components/EventGrid";
 import EventFilter from "@/components/EventFilter";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +10,11 @@ export default async function EventsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }> | { locale: string };
-  searchParams: Promise<{ q?: string; category?: string }> | { q?: string; category?: string };
+  searchParams:
+    | Promise<{ q?: string; category?: string; page?: string }>
+    | { q?: string; category?: string; page?: string };
 }) {
-  // ✅ safely resolve both even if they’re Promises
+
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearchParams = await Promise.resolve(searchParams);
 
@@ -20,21 +23,12 @@ export default async function EventsPage({
 
   const q = resolvedSearchParams?.q?.toLowerCase() || "";
   const category = resolvedSearchParams?.category || "";
+  const page = parseInt(resolvedSearchParams?.page || "1");
+  const limit = 6;
 
-  // ✅ load mock data
-  const allEvents = await getEvents();
 
-  // ✅ filter based on search text + category
-  const filtered = allEvents.filter((e) => {
-    const matchesQuery =
-      !q ||
-      e.title.toLowerCase().includes(q) ||
-      e.description.toLowerCase().includes(q) ||
-      e.location.city.toLowerCase().includes(q);
-
-    const matchesCategory = !category || e.category.toLowerCase() === category.toLowerCase();
-    return matchesQuery && matchesCategory;
-  });
+  const { events, total } = await getPaginatedEvents(page, limit, q, category);
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <section className={`space-y-6 ${isArabic ? "text-right" : "text-left"}`}>
@@ -42,9 +36,44 @@ export default async function EventsPage({
         {isArabic ? "الفعاليات القادمة" : "Upcoming Events"}
       </h1>
 
-      {/* pass locale to children */}
+      {/* Filters */}
       <EventFilter locale={locale} />
-      <EventGrid events={filtered} locale={locale} />
+
+      {/* Events */}
+      <EventGrid events={events} locale={locale} />
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div
+          className={`flex items-center justify-center gap-3 mt-8 ${
+            isArabic ? "flex-row-reverse" : ""
+          }`}
+        >
+          {page > 1 && (
+            <Link
+              href={`/${locale}/events?q=${q}&category=${category}&page=${page - 1}`}
+              className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            >
+              {isArabic ? "السابق" : "Previous"}
+            </Link>
+          )}
+
+          <span className="text-sm text-gray-600">
+            {isArabic
+              ? `صفحة ${page} من ${totalPages}`
+              : `Page ${page} of ${totalPages}`}
+          </span>
+
+          {page < totalPages && (
+            <Link
+              href={`/${locale}/events?q=${q}&category=${category}&page=${page + 1}`}
+              className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            >
+              {isArabic ? "التالي" : "Next"}
+            </Link>
+          )}
+        </div>
+      )}
     </section>
   );
 }

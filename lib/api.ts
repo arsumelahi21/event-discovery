@@ -34,3 +34,19 @@ export async function searchEvents(query?: string, category?: string): Promise<E
     return matchesQuery && matchesCategory;
   });
 }
+
+/**
+ * Paginated events (added)
+ */
+export async function getPaginatedEvents(
+  page: number = 1,
+  limit: number = 6,
+  query?: string,
+  category?: string
+): Promise<{ events: Event[]; total: number }> {
+  const all = await searchEvents(query, category);
+  const total = all.length;
+  const start = (page - 1) * limit;
+  const paginated = all.slice(start, start + limit);
+  return { events: paginated, total };
+}

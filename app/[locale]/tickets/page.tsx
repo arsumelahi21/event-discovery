@@ -1,93 +1,95 @@
 "use client";
 
-import { useState } from "react";
-import DataTable, { Column } from "@/components/DataTable";
-import TicketPrintView from "@/components/TicketPrintView";
+import { useTicketStore } from "@/lib/store";
 
-type Ticket = {
-  id: string;
-  eventTitle: string;
-  attendee: string;
-  email: string;
-  date: string;
-  status: "Confirmed" | "Pending";
-};
+export default function MyTicketsPage() {
+  const { tickets, removeTicket } = useTicketStore();
 
-const tickets: Ticket[] = [
-  {
-    id: "TCK-001",
-    eventTitle: "Tech Conference 2025",
-    attendee: "John Doe",
-    email: "john@example.com",
-    date: "2025-12-10",
-    status: "Confirmed",
-  },
-  {
-    id: "TCK-002",
-    eventTitle: "Music Fest Dubai",
-    attendee: "Jane Smith",
-    email: "jane@example.com",
-    date: "2025-11-22",
-    status: "Pending",
-  },
-];
+  const handlePrint = (ticketId: string) => {
+    const ticket = tickets.find((t) => t.id === ticketId);
+    if (!ticket) return;
 
-export default function TicketsPage() {
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+    const printContent = `
+      <html>
+        <head>
+          <title>Ticket - ${ticket.eventTitle}</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; }
+            .ticket {
+              border: 2px solid #000;
+              border-radius: 12px;
+              padding: 20px;
+              width: 400px;
+              margin: 0 auto;
+            }
+            h2 { margin-top: 0; }
+            p { margin: 5px 0; }
+            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <h2>${ticket.eventTitle}</h2>
+            <p><strong>Name:</strong> ${ticket.name}</p>
+            <p><strong>Email:</strong> ${ticket.email}</p>
+            <p><strong>Date:</strong> ${ticket.date}</p>
+            <div class="footer">
+              <p>Thank you for booking with Event Discovery Platform</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-  const columns: Column<Ticket>[] = [
-    { key: "id", label: "Ticket ID", sortable: true },
-    { key: "eventTitle", label: "Event", sortable: true },
-    { key: "attendee", label: "Attendee", sortable: true },
-    { key: "email", label: "Email" },
-    {
-      key: "date",
-      label: "Date",
-      sortable: true,
-      render: (row) =>
-        new Date(row.date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (row) => (
-        <span
-          className={`px-3 py-1 text-xs rounded-full font-semibold ${
-            row.status === "Confirmed"
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-  ];
-
-  const handlePrintClick = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
+    const newWindow = window.open("", "_blank");
+    newWindow!.document.write(printContent);
+    newWindow!.document.close();
+    newWindow!.print();
   };
 
   return (
-    <>
-      <DataTable
-        data={tickets}
-        columns={columns}
-        title="My Tickets"
-        searchKeys={["eventTitle", "attendee", "email"]}
-        onPrint={handlePrintClick}
-      />
+    <section className="p-6">
+      <h1 className="text-3xl font-bold mb-4">My Tickets</h1>
 
-      {selectedTicket && (
-        <TicketPrintView
-          ticket={selectedTicket}
-          onClose={() => setSelectedTicket(null)}
-        />
+      {tickets.length === 0 ? (
+        <p className="text-gray-500">No tickets booked yet.</p>
+      ) : (
+        <table className="w-full border-collapse bg-white rounded-xl overflow-hidden shadow">
+          <thead className="bg-gray-100 text-left">
+            <tr>
+              <th className="p-3">Event</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Date</th>
+              <th className="p-3 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tickets.map((t) => (
+              <tr key={t.id} className="border-b hover:bg-gray-50">
+                <td className="p-3">{t.eventTitle}</td>
+                <td className="p-3">{t.name}</td>
+                <td className="p-3">{t.email}</td>
+                <td className="p-3">{t.date}</td>
+                <td className="p-3 flex gap-3 justify-center">
+                  <button
+                    onClick={() => handlePrint(t.id)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Print
+                  </button>
+                  <button
+                    onClick={() => removeTicket(t.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-    </>
+    </section>
   );
 }
